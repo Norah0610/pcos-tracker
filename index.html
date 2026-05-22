@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bloom — PCOS Daily Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --cream: #faf9f7;
+  --white: #ffffff;
+  --stone: #f2efe9;
+  --sage: #e8ede6;
+  --sage-mid: #b5c9b0;
+  --sage-dark: #4a7c59;
+  --sage-deep: #2d5c3e;
+  --blush: #f5ede8;
+  --blush-mid: #d9a89a;
+  --blush-dark: #9c5a4e;
+  --sky: #e8eff5;
+  --sky-mid: #8fb3cc;
+  --sky-dark: #2d6a8f;
+  --amber: #fdf0e0;
+  --amber-mid: #d4a057;
+  --amber-dark: #7a5520;
+  --lavender: #eeebf5;
+  --lavender-mid: #a090c8;
+  --lavender-dark: #4a3878;
+  --rose: #fdf0f3;
+  --rose-mid: #e8a0b0;
+  --rose-dark: #8c3a50;
+  --text: #1a1a1a;
+  --text-2: #555550;
+  --text-3: #999990;
+  --border: rgba(0,0,0,0.07);
+  --border-2: rgba(0,0,0,0.12);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--cream); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+/* NAV */
+nav { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 62px; position: sticky; top: 0; z-index: 100; }
+.nav-logo { font-family: var(--serif); font-size: 22px; color: var(--text); letter-spacing: -0.01em; }
+.nav-logo span { color: var(--sage-dark); font-style: italic; }
+.nav-date { font-size: 13px; color: var(--text-3); background: var(--stone); padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border); }
+.nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav-tab { font-family: var(--sans); font-size: 13px; font-weight: 400; color: var(--text-2); background: none; border: none; padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap; }
+.nav-tab:hover { background: var(--stone); color: var(--text); }
+.nav-tab.active { background: var(--sage-dark); color: #fff; }
+
+/* PAGES */
+.page { display: none; padding: 2rem; max-width: 820px; margin: 0 auto; }
+.page.active { display: block; animation: fadeUp 0.3s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+/* SHARED */
+.page-header { margin-bottom: 1.75rem; }
+.page-header h2 { font-family: var(--serif); font-size: 28px; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 4px; }
+.page-header p { font-size: 14px; color: var(--text-3); }
+.section-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 12px; margin-top: 1.75rem; }
+.card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 1.25rem; }
+.reset-btn { background: none; border: 1px solid var(--border-2); border-radius: 20px; padding: 7px 18px; font-size: 13px; font-family: var(--sans); color: var(--text-2); cursor: pointer; transition: background 0.15s; margin-bottom: 2rem; }
+.reset-btn:hover { background: var(--stone); }
+.tag { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; }
+
+/* SUMMARY STRIP */
+.summary-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+.summary-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; text-align: center; }
+.summary-card .s-val { font-family: var(--serif); font-size: 32px; color: var(--text); line-height: 1; margin-bottom: 4px; }
+.summary-card .s-lbl { font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ADHERENCE BAR */
+.adh-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 1.75rem; }
+.adh-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-2); margin-bottom: 8px; }
+.adh-track { height: 6px; background: var(--stone); border-radius: 3px; overflow: hidden; }
+.adh-fill { height: 100%; border-radius: 3px; background: var(--sage-dark); transition: width 0.6s ease; }
+
+/* MED BLOCKS */
+.med-block { margin-bottom: 1.75rem; }
+.block-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.block-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.block-title { font-size: 15px; font-weight: 500; }
+.block-time-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 400; }
+.time-group { margin-bottom: 10px; }
+.time-group-label { font-size: 12px; color: var(--text-3); margin-bottom: 6px; }
+.med-row { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.1s; margin-bottom: 6px; user-select: none; }
+.med-row:hover { border-color: var(--border-2); transform: translateY(-1px); }
+.med-row.taken { background: #f2f8f1; border-color: var(--sage-mid); }
+.med-row.skipped { background: #fdf5f4; border-color: var(--blush-mid); }
+.med-check { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--border-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; background: var(--stone); color: transparent; transition: all 0.2s; }
+.med-row.taken .med-check { background: var(--sage-mid); border-color: var(--sage-mid); color: white; }
+.med-row.skipped .med-check { background: var(--blush-mid); border-color: var(--blush-mid); color: white; }
+.med-body { flex: 1; min-width: 0; }
+.med-name { font-size: 14px; font-weight: 500; }
+.med-row.taken .med-name { color: var(--sage-deep); }
+.med-row.skipped .med-name { color: var(--blush-dark); text-decoration: line-through; }
+.med-sub { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.med-row.taken .med-sub { color: var(--sage-dark); }
+.med-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.med-status { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+.med-row.taken .med-status { color: var(--sage-dark); }
+.med-row.skipped .med-status { color: var(--blush-dark); }
+.refill-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+.refill-ok { background: var(--sage); color: var(--sage-deep); }
+.refill-low { background: var(--amber); color: var(--amber-dark); }
+.refill-critical { background: #fdf0f3; color: var(--rose-dark); }
+.tip-row { background: var(--stone); border-radius: var(--radius-sm); padding: 9px 14px; font-size: 12px; color: var(--text-2); margin-top: 4px; display: flex; gap: 8px; align-items: flex-start; }
+
+/* REFILL PANEL */
+.refill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.refill-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.refill-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.refill-med-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.refill-count-area { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.refill-num { font-family: var(--serif); font-size: 28px; color: var(--text); line-height: 1; }
+.refill-unit { font-size: 12px; color: var(--text-3); }
+.refill-track { height: 4px; background: var(--stone); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
+.refill-bar { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+.refill-controls { display: flex; gap: 6px; }
+.refill-btn { background: var(--stone); border: 1px solid var(--border-2); border-radius: var(--radius-sm); width: 30px; height: 30px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; color: var(--text-2); font-family: var(--sans); }
+.refill-btn:hover { background: var(--sage); }
+.refill-add-btn { background: var(--stone); border: 1px solid var(--border-2); border-radius: var(--radius-sm); padding: 0 12px; height: 30px; font-size: 12px; cursor: pointer; font-family: var(--sans); color: var(--text-2); transition: background 0.15s; white-space: nowrap; }
+.refill-add-btn:hover { background: var(--sage); color: var(--sage-deep); }
+
+/* HABITS */
+.habits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.habit-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.1s; user-select: none; }
+.habit-card:hover { transform: translateY(-2px); border-color: var(--border-2); }
+.habit-card.done { background: #f2f8f1; border-color: var(--sage-mid); }
+.habit-card.done .hc-name { color: var(--sage-deep); }
+.habit-card.done .hc-status { color: var(--sage-dark); }
+.hc-icon { font-size: 22px; margin-bottom: 10px; }
+.hc-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+.hc-status { font-size: 12px; color: var(--text-3); }
+
+/* WATER */
+.water-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.water-title { font-size: 15px; font-weight: 500; }
+.water-cups { display: flex; gap: 8px; flex-wrap: wrap; }
+.wcup { width: 42px; height: 42px; border-radius: var(--radius-sm); border: 1px solid var(--border-2); background: var(--stone); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.1s; }
+.wcup:hover { transform: scale(1.08); }
+.wcup.filled { background: var(--sky); border-color: var(--sky-mid); }
+
+/* STREAK */
+.streak-dots { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.streak-dot { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-2); background: var(--stone); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--text-3); }
+.streak-dot.full { background: var(--sage); border-color: var(--sage-mid); color: var(--sage-deep); }
+.streak-dot.partial { background: var(--amber); border-color: var(--amber-mid); color: var(--amber-dark); }
+.streak-dot.today { border: 2px solid var(--sage-dark); color: var(--text); background: var(--white); }
+.streak-legend { display: flex; gap: 16px; font-size: 12px; color: var(--text-3); }
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+
+/* SYMPTOM JOURNAL */
+.symptom-section { margin-bottom: 1.5rem; }
+.symptom-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 1rem; }
+.symptom-chip { background: var(--white); border: 1px solid var(--border-2); border-radius: 30px; padding: 8px 14px; font-size: 13px; color: var(--text-2); cursor: pointer; text-align: center; transition: all 0.15s; user-select: none; }
+.symptom-chip:hover { border-color: var(--blush-mid); }
+.symptom-chip.active { background: var(--blush); border-color: var(--blush-mid); color: var(--blush-dark); font-weight: 500; }
+.scale-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.scale-label { font-size: 13px; color: var(--text-2); min-width: 80px; }
+.scale-dots { display: flex; gap: 6px; }
+.scale-dot { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border-2); background: var(--stone); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--text-3); transition: all 0.15s; }
+.scale-dot:hover { border-color: var(--sage-mid); }
+.scale-dot.sel-energy { background: var(--sky); border-color: var(--sky-mid); color: var(--sky-dark); }
+.scale-dot.sel-mood { background: var(--lavender); border-color: var(--lavender-mid); color: var(--lavender-dark); }
+.scale-dot.sel-pain { background: var(--blush); border-color: var(--blush-mid); color: var(--blush-dark); }
+.journal-textarea { width: 100%; border: 1px solid var(--border-2); border-radius: var(--radius-sm); padding: 12px; font-family: var(--sans); font-size: 14px; color: var(--text); background: var(--white); resize: vertical; min-height: 90px; outline: none; transition: border-color 0.15s; }
+.journal-textarea:focus { border-color: var(--sage-mid); }
+.journal-textarea::placeholder { color: var(--text-3); }
+.save-btn { background: var(--sage-dark); color: white; border: none; border-radius: 20px; padding: 8px 22px; font-size: 13px; font-family: var(--sans); cursor: pointer; transition: opacity 0.15s; margin-top: 10px; }
+.save-btn:hover { opacity: 0.85; }
+.entries-list { display: flex; flex-direction: column; gap: 10px; }
+.entry-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.entry-date { font-size: 12px; color: var(--text-3); margin-bottom: 6px; }
+.entry-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.entry-chip { font-size: 11px; padding: 2px 9px; border-radius: 20px; background: var(--blush); color: var(--blush-dark); }
+.entry-scales { font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
+.entry-note { font-size: 13px; color: var(--text-2); font-style: italic; }
+.empty-state { font-size: 14px; color: var(--text-3); padding: 20px 0; text-align: center; }
+
+/* FOOD LOG */
+.food-quick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 1rem; }
+.meal-slot { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.meal-slot-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.meal-slot-name { font-size: 14px; font-weight: 500; }
+.meal-slot-time { font-size: 11px; color: var(--text-3); }
+.meal-items { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; min-height: 30px; }
+.meal-item { font-size: 13px; color: var(--text-2); display: flex; justify-content: space-between; align-items: center; }
+.meal-item-del { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 16px; padding: 0 2px; line-height: 1; }
+.meal-item-del:hover { color: #c05a50; }
+.meal-add-row { display: flex; gap: 6px; }
+.meal-input { flex: 1; font-size: 13px; border: 1px solid var(--border-2); border-radius: var(--radius-sm); padding: 6px 10px; font-family: var(--sans); background: var(--cream); color: var(--text); outline: none; }
+.meal-input:focus { border-color: var(--sage-mid); }
+.meal-add-icon { width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--sage); border: 1px solid var(--sage-mid); color: var(--sage-deep); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+.meal-add-icon:hover { background: var(--sage-mid); }
+.bs-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bs-label { font-size: 13px; color: var(--text-2); min-width: 110px; }
+.bs-input { width: 90px; font-size: 13px; border: 1px solid var(--border-2); border-radius: var(--radius-sm); padding: 6px 10px; font-family: var(--sans); background: var(--white); color: var(--text); outline: none; }
+.bs-input:focus { border-color: var(--sage-mid); }
+.bs-unit { font-size: 12px; color: var(--text-3); }
+.bs-status { font-size: 12px; padding: 3px 10px; border-radius: 20px; }
+.bs-normal { background: var(--sage); color: var(--sage-deep); }
+.bs-high { background: var(--amber); color: var(--amber-dark); }
+.bs-low { background: var(--blush); color: var(--blush-dark); }
+.water-intake-note { font-size: 12px; color: var(--text-3); margin-top: 8px; }
+
+/* MOTIVATION */
+.motivation { background: var(--sage); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 1.75rem; border: 1px solid var(--sage-mid); }
+.motivation p { font-family: var(--serif); font-size: 17px; font-style: italic; color: var(--sage-deep); line-height: 1.5; }
+.motivation .attr { font-family: var(--sans); font-size: 12px; color: var(--sage-dark); margin-top: 6px; }
+
+@media (max-width: 600px) {
+  nav { padding: 0 1rem; flex-wrap: wrap; height: auto; padding-top: 10px; padding-bottom: 10px; gap: 8px; }
+  .nav-date { display: none; }
+  .page { padding: 1.25rem 1rem; }
+  .summary-strip { gap: 8px; }
+  .summary-card .s-val { font-size: 24px; }
+  .nav-tabs { gap: 2px; }
+  .nav-tab { padding: 5px 10px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">bloom<span>.</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('meds',this)">Medicines</button>
+    <button class="nav-tab" onclick="showPage('habits',this)">Habits</button>
+    <button class="nav-tab" onclick="showPage('symptoms',this)">Symptoms</button>
+    <button class="nav-tab" onclick="showPage('food',this)">Food log</button>
+  </div>
+  <div class="nav-date" id="nav-date"></div>
+</nav>
+
+<!-- ═══════════ MEDICINES PAGE ═══════════ -->
+<div class="page active" id="page-meds">
+  <div class="page-header">
+    <h2>Today's medicines</h2>
+    <p>Your PCOS daily schedule — tap each dose to mark it taken.</p>
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-card"><div class="s-val" id="s-total">12</div><div class="s-lbl">Total doses</div></div>
+    <div class="summary-card"><div class="s-val" id="s-taken" style="color:var(--sage-dark);">0</div><div class="s-lbl">Taken</div></div>
+    <div class="summary-card"><div class="s-val" id="s-rem">12</div><div class="s-lbl">Remaining</div></div>
+  </div>
+
+  <div class="adh-wrap">
+    <div class="adh-row"><span>Daily adherence</span><span id="adh-pct">0%</span></div>
+    <div class="adh-track"><div class="adh-fill" id="adh-fill" style="width:0%;"></div></div>
+  </div>
+
+  <!-- MORNING -->
+  <div class="med-block">
+    <div class="block-header">
+      <div class="block-icon" style="background:#fdf0e0;">🌅</div>
+      <div class="block-title">Morning block</div>
+      <span class="block-time-badge" style="background:#fdf0e0;color:#7a5520;">6:30 – 7:30 AM</span>
+    </div>
+    <div class="time-group">
+      <div class="time-group-label">6:30 AM — empty stomach</div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m1" data-med="Levothyroxine">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Levothyroxine</div><div class="med-sub">Thyroid medication — must be taken on empty stomach</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-ok" id="rb-m1">28 left</div></div>
+      </div>
+    </div>
+    <div class="time-group">
+      <div class="time-group-label">7:30 AM — with smoothie</div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m2" data-med="Probiotic">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Probiotic</div><div class="med-sub">Gut health support</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-ok" id="rb-m2">30 left</div></div>
+      </div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m3" data-med="Omega-3">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Omega-3</div><div class="med-sub">Anti-inflammatory support</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-ok" id="rb-m3">60 left</div></div>
+      </div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m4" data-med="NAC">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">NAC</div><div class="med-sub">N-acetylcysteine — insulin & inflammation support</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-low" id="rb-m4">8 left</div></div>
+      </div>
+    </div>
+    <div class="tip-row"><span>💡</span> Keeps thyroid absorption clean and starts inflammation/insulin support early.</div>
+  </div>
+
+  <!-- MIDDAY -->
+  <div class="med-block">
+    <div class="block-header">
+      <div class="block-icon" style="background:#e8eff5;">☀️</div>
+      <div class="block-title">Midday block</div>
+      <span class="block-time-badge" style="background:#e8eff5;color:#2d6a8f;">10:30 – 11:00 AM</span>
+    </div>
+    <div class="time-group">
+      <div class="time-group-label">10:30 AM — before brunch</div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m5" data-med="Berberine">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Berberine</div><div class="med-sub">1st dose — insulin control</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-ok" id="rb-m5">45 left</div></div>
+      </div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m6" data-med="Inositol">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Inositol</div><div class="med-sub">1st dose — hormone regulation</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-critical" id="rb-m6">4 left</div></div>
+      </div>
+    </div>
+    <div class="time-group">
+      <div class="time-group-label">11:00 AM — with brunch</div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m7" data-med="Multivitamin">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Multivitamin</div><div class="med-sub">Take with food</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-ok" id="rb-m7">30 left</div></div>
+      </div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m8" data-med="Stress nutrients">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Stress nutrients</div><div class="med-sub">Cortisol management</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-ok" id="rb-m8">22 left</div></div>
+      </div>
+    </div>
+    <div class="tip-row"><span>💡</span> Your main fat-loss and hormone regulation window — don't skip this block.</div>
+  </div>
+
+  <!-- EVENING -->
+  <div class="med-block">
+    <div class="block-header">
+      <div class="block-icon" style="background:#eeebf5;">🌙</div>
+      <div class="block-title">Evening block</div>
+      <span class="block-time-badge" style="background:#eeebf5;color:#4a3878;">5:30 – 10:00 PM</span>
+    </div>
+    <div class="time-group">
+      <div class="time-group-label">5:30 PM — before dinner</div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m9" data-med="Berberine">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Berberine</div><div class="med-sub">2nd dose — insulin control</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-ok" id="rb-m9">45 left</div></div>
+      </div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m10" data-med="Inositol">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Inositol</div><div class="med-sub">2nd dose — hormone regulation</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-critical" id="rb-m10">4 left</div></div>
+      </div>
+    </div>
+    <div class="time-group">
+      <div class="time-group-label">9:30–10:00 PM — before bed</div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m11" data-med="Magnesium Citrate">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Magnesium Citrate</div><div class="med-sub">Sleep and hormone support</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-ok" id="rb-m11">60 left</div></div>
+      </div>
+      <div class="med-row" onclick="toggleMed(this)" data-id="m12" data-med="Birth control">
+        <div class="med-check">✓</div>
+        <div class="med-body"><div class="med-name">Birth control</div><div class="med-sub">Take at consistent time nightly</div></div>
+        <div class="med-right"><div class="med-status">Tap to mark</div><div class="refill-badge refill-low" id="rb-m12">10 left</div></div>
+      </div>
+    </div>
+    <div class="tip-row"><span>💡</span> Sleep + hormone support — magnesium and birth control at the same time every night.</div>
+  </div>
+
+  <button class="reset-btn" onclick="resetMeds()">↺ Reset today's doses</button>
+
+  <!-- REFILL PANEL -->
+  <div class="section-title" style="margin-top:0;">💊 Refill tracker</div>
+  <p style="font-size:13px;color:var(--text-3);margin-bottom:1rem;">Track your pill supply. Use + / − to adjust counts after refilling or corrections.</p>
+  <div class="refill-grid" id="refill-grid"></div>
+</div>
+
+<!-- ═══════════ HABITS PAGE ═══════════ -->
+<div class="page" id="page-habits">
+  <div class="page-header">
+    <h2>Daily habits</h2>
+    <p>Small consistent actions that support your PCOS management.</p>
+  </div>
+  <div class="motivation">
+    <p>"Consistency is not about being perfect every day. It's about showing up for yourself."</p>
+    <div class="attr">— Your daily reminder</div>
+  </div>
+  <div class="habits-grid" id="habits-grid"></div>
+  <div class="card">
+    <div class="water-header">
+      <div class="water-title">💧 Water intake</div>
+      <div id="water-count" style="font-size:13px;color:var(--text-3);">0 / 8 glasses</div>
+    </div>
+    <div class="water-cups" id="water-cups"></div>
+  </div>
+  <div class="card">
+    <div class="streak-title" style="font-size:15px;font-weight:500;margin-bottom:14px;">7-day streak</div>
+    <div class="streak-dots" id="streak-dots"></div>
+    <div class="streak-legend">
+      <span><span class="legend-dot" style="background:var(--sage-mid);"></span>All done</span>
+      <span><span class="legend-dot" style="background:var(--amber-mid);"></span>Partial</span>
+      <span><span class="legend-dot" style="background:var(--stone);border:1px solid var(--border-2);"></span>Upcoming</span>
+    </div>
+  </div>
+  <button class="reset-btn" onclick="resetHabits()">↺ Reset today's habits</button>
+</div>
+
+<!-- ═══════════ SYMPTOMS PAGE ═══════════ -->
+<div class="page" id="page-symptoms">
+  <div class="page-header">
+    <h2>Symptom journal</h2>
+    <p>Log how you're feeling today — patterns over time help your care.</p>
+  </div>
+
+  <div class="card symptom-section">
+    <div style="font-size:14px;font-weight:500;margin-bottom:12px;">What are you experiencing today?</div>
+    <div class="symptom-grid">
+      <div class="symptom-chip" onclick="toggleChip(this)">😔 Low mood</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">😴 Fatigue</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">🎈 Bloating</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">😣 Cramps</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">🍬 Sugar cravings</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">🧠 Brain fog</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">😤 Irritability</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">💆 Headache</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">🌿 Feeling good</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">⚡ High energy</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">😰 Anxious</div>
+      <div class="symptom-chip" onclick="toggleChip(this)">🌊 Water retention</div>
+    </div>
+
+    <div style="font-size:14px;font-weight:500;margin-bottom:10px;">Rate your levels today</div>
+    <div class="scale-row">
+      <div class="scale-label">Energy</div>
+      <div class="scale-dots" id="energy-dots"></div>
+    </div>
+    <div class="scale-row">
+      <div class="scale-label">Mood</div>
+      <div class="scale-dots" id="mood-dots"></div>
+    </div>
+    <div class="scale-row" style="margin-bottom:16px;">
+      <div class="scale-label">Pain / discomfort</div>
+      <div class="scale-dots" id="pain-dots"></div>
+    </div>
+
+    <div style="font-size:14px;font-weight:500;margin-bottom:8px;">Notes</div>
+    <textarea class="journal-textarea" id="journal-note" placeholder="Anything else to note about how you feel today..."></textarea>
+    <br/>
+    <button class="save-btn" onclick="saveEntry()">Save today's entry</button>
+    <span id="save-confirm" style="font-size:12px;color:var(--sage-dark);margin-left:12px;display:none;">✓ Saved!</span>
+  </div>
+
+  <div style="font-size:15px;font-weight:500;margin-bottom:12px;">Past entries</div>
+  <div id="entries-list" class="entries-list">
+    <div class="empty-state">No entries yet. Log your first one above.</div>
+  </div>
+</div>
+
+<!-- ═══════════ FOOD LOG PAGE ═══════════ -->
+<div class="page" id="page-food">
+  <div class="page-header">
+    <h2>Food log</h2>
+    <p>Track your meals and blood sugar to spot patterns with your PCOS.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem;">
+    <div style="font-size:14px;font-weight:500;margin-bottom:12px;">Blood sugar notes</div>
+    <div class="bs-row">
+      <div class="bs-label">Fasting (morning)</div>
+      <input type="number" class="bs-input" id="bs-fasting" placeholder="90" min="0" max="400" oninput="updateBsStatus('bs-fasting','bss-fasting',70,100)"/>
+      <div class="bs-unit">mg/dL</div>
+      <div class="bs-status bs-normal" id="bss-fasting" style="display:none;"></div>
+    </div>
+    <div class="bs-row">
+      <div class="bs-label">After meal</div>
+      <input type="number" class="bs-input" id="bs-post" placeholder="130" min="0" max="400" oninput="updateBsStatus('bs-post','bss-post',70,140)"/>
+      <div class="bs-unit">mg/dL</div>
+      <div class="bs-status bs-normal" id="bss-post" style="display:none;"></div>
+    </div>
+    <div style="font-size:12px;color:var(--text-3);margin-top:4px;">Normal fasting: 70–100 · Normal post-meal: 70–140 mg/dL</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:1.5rem;" id="meal-slots"></div>
+
+  <div class="card">
+    <div class="water-header">
+      <div class="water-title">💧 Water today</div>
+      <div id="water-count-food" style="font-size:13px;color:var(--text-3);">0 / 8 glasses</div>
+    </div>
+    <div class="water-cups" id="water-cups-food"></div>
+    <div class="water-intake-note">Staying hydrated supports insulin sensitivity and reduces PCOS inflammation.</div>
+  </div>
+</div>
+
+<script>
+/* ── STATE ── */
+let medStatuses = {};
+let refillCounts = { m1:28,m2:30,m3:60,m4:8,m5:45,m6:4,m7:30,m8:22,m9:45,m10:4,m11:60,m12:10 };
+const refillMax  = { m1:30,m2:30,m3:60,m4:60,m5:60,m6:60,m7:30,m8:30,m9:60,m10:60,m11:60,m12:28 };
+const refillNames = { m1:'Levothyroxine',m2:'Probiotic',m3:'Omega-3',m4:'NAC',m5:'Berberine (AM)',m6:'Inositol (AM)',m7:'Multivitamin',m8:'Stress nutrients',m9:'Berberine (PM)',m10:'Inositol (PM)',m11:'Magnesium Citrate',m12:'Birth control' };
+let habitStatus = {};
+let water = 0;
+let waterFood = 0;
+let energyVal = 0, moodVal = 0, painVal = 0;
+let journalEntries = [];
+let mealData = { Breakfast:[], Lunch:[], Dinner:[], Snacks:[] };
+const mealTimes = { Breakfast:'7–9 AM', Lunch:'12–2 PM', Dinner:'6–8 PM', Snacks:'Anytime' };
+
+const habits = [
+  {id:'h1',icon:'🥗',name:'Eat low-GI breakfast',desc:'Supports insulin balance'},
+  {id:'h2',icon:'🚶',name:'Move your body',desc:'30 min walk or workout'},
+  {id:'h3',icon:'😴',name:'Sleep by 10:30 PM',desc:'Hormone reset during sleep'},
+  {id:'h4',icon:'🧘',name:'Stress management',desc:'10 min breathwork or rest'},
+  {id:'h5',icon:'🚫',name:'No processed sugar',desc:'Keeps insulin stable'},
+  {id:'h6',icon:'📓',name:'Log symptoms',desc:'Track how you feel today'},
+];
+habits.forEach(h => habitStatus[h.id] = false);
+
+/* ── NAV ── */
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+document.getElementById('nav-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+/* ── MEDS ── */
+function toggleMed(el) {
+  const id = el.dataset.id;
+  const cur = medStatuses[id] || 'pending';
+  const next = cur==='pending'?'taken':cur==='taken'?'skipped':'pending';
+  medStatuses[id] = next;
+  el.className = 'med-row ' + (next==='pending'?'':next);
+  el.querySelector('.med-status').textContent = next==='taken'?'✓ Taken':next==='skipped'?'Skipped':'Tap to mark';
+  if (next==='taken') { refillCounts[id] = Math.max(0, refillCounts[id]-1); updateRefillBadge(id); renderRefillGrid(); }
+  updateMedStats();
+}
+function updateMedStats() {
+  const all = document.querySelectorAll('.med-row').length;
+  const taken = document.querySelectorAll('.med-row.taken').length;
+  const rem = all - taken - document.querySelectorAll('.med-row.skipped').length;
+  document.getElementById('s-total').textContent = all;
+  document.getElementById('s-taken').textContent = taken;
+  document.getElementById('s-rem').textContent = Math.max(0,rem);
+  const pct = all ? Math.round(taken/all*100) : 0;
+  document.getElementById('adh-pct').textContent = pct+'%';
+  document.getElementById('adh-fill').style.width = pct+'%';
+  document.getElementById('adh-fill').style.background = pct>=50?'#4a7c59':'#d4a057';
+}
+function resetMeds() {
+  medStatuses = {};
+  document.querySelectorAll('.med-row').forEach(el => {
+    el.className = 'med-row';
+    el.querySelector('.med-status').textContent = 'Tap to mark';
+  });
+  updateMedStats();
+}
+function updateRefillBadge(id) {
+  const el = document.getElementById('rb-'+id);
+  if (!el) return;
+  const n = refillCounts[id];
+  el.textContent = n+' left';
+  el.className = 'refill-badge ' + (n<=5?'refill-critical':n<=14?'refill-low':'refill-ok');
+}
+
+/* ── REFILL GRID ── */
+function renderRefillGrid() {
+  const grid = document.getElementById('refill-grid');
+  grid.innerHTML = '';
+  Object.keys(refillNames).forEach(id => {
+    const n = refillCounts[id];
+    const max = refillMax[id];
+    const pct = Math.round(Math.min(100, n/max*100));
+    const cls = n<=5?'refill-critical':n<=14?'refill-low':'refill-ok';
+    const barColor = n<=5?'#e8a0b0':n<=14?'#d4a057':'#b5c9b0';
+    const card = document.createElement('div');
+    card.className = 'refill-card';
+    card.innerHTML = `
+      <div class="refill-card-top">
+        <div class="refill-med-name">${refillNames[id]}</div>
+        <span class="refill-badge ${cls}">${n<=5?'⚠ Reorder':n<=14?'Running low':'In stock'}</span>
+      </div>
+      <div class="refill-count-area"><div class="refill-num">${n}</div><div class="refill-unit">pills left</div></div>
+      <div class="refill-track"><div class="refill-bar" style="width:${pct}%;background:${barColor};"></div></div>
+      <div class="refill-controls">
+        <button class="refill-btn" onclick="adjustRefill('${id}',-1)">−</button>
+        <button class="refill-btn" onclick="adjustRefill('${id}',1)">+</button>
+        <button class="refill-add-btn" onclick="adjustRefill('${id}',${max})">+ Refill (${max})</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+function adjustRefill(id, delta) {
+  refillCounts[id] = Math.max(0, refillCounts[id] + delta);
+  updateRefillBadge(id);
+  renderRefillGrid();
+}
+
+/* ── HABITS ── */
+function renderHabits() {
+  const grid = document.getElementById('habits-grid');
+  grid.innerHTML = '';
+  habits.forEach(h => {
+    const card = document.createElement('div');
+    card.className = 'habit-card'+(habitStatus[h.id]?' done':'');
+    card.innerHTML = `<div class="hc-icon">${h.icon}</div><div class="hc-name">${h.name}</div><div class="hc-status">${habitStatus[h.id]?'✓ Done today':h.desc}</div>`;
+    card.onclick = ()=>{ habitStatus[h.id]=!habitStatus[h.id]; renderHabits(); };
+    grid.appendChild(card);
+  });
+}
+function resetHabits() { habits.forEach(h=>habitStatus[h.id]=false); water=0; renderHabits(); renderWater(); }
+
+/* ── WATER ── */
+function renderWater() {
+  ['water-cups','water-cups-food'].forEach((cupId, idx) => {
+    const wrap = document.getElementById(cupId);
+    if (!wrap) return;
+    const w = idx===0?water:waterFood;
+    wrap.innerHTML = '';
+    for (let i=0;i<8;i++) {
+      const cup = document.createElement('div');
+      cup.className = 'wcup'+(i<w?' filled':'');
+      cup.textContent = i<w?'💧':'○';
+      cup.onclick = ()=>{
+        if(idx===0){water=i<water?i:i+1;}else{waterFood=i<waterFood?i:i+1;}
+        renderWater();
+        const lbl = idx===0?'water-count':'water-count-food';
+        const val = idx===0?water:waterFood;
+        document.getElementById(lbl).textContent = val+' / 8 glasses';
+      };
+      wrap.appendChild(cup);
+    }
+  });
+}
+
+/* ── STREAK ── */
+function renderStreak() {
+  const wrap = document.getElementById('streak-dots');
+  const days = ['M','T','W','T','F','S','S'];
+  const states = ['full','full','partial','full','full','partial',''];
+  const today = new Date().getDay();
+  days.forEach((d,i) => {
+    const dot = document.createElement('div');
+    const isToday = i===(today===0?6:today-1);
+    dot.className = 'streak-dot '+(isToday?'today':(i<(today===0?6:today-1)?states[i]:''));
+    dot.textContent = d;
+    wrap.appendChild(dot);
+  });
+}
+
+/* ── SYMPTOMS ── */
+function makeScaleDots(containerId, cls) {
+  const wrap = document.getElementById(containerId);
+  for (let i=1;i<=5;i++) {
+    const dot = document.createElement('div');
+    dot.className = 'scale-dot';
+    dot.textContent = i;
+    dot.dataset.val = i;
+    dot.dataset.group = containerId;
+    dot.dataset.cls = cls;
+    dot.onclick = ()=>{
+      document.querySelectorAll(`[data-group="${containerId}"]`).forEach(d=>d.className='scale-dot');
+      for(let j=1;j<=i;j++){
+        const t = wrap.querySelector(`[data-val="${j}"]`);
+        if(t) t.className = 'scale-dot sel-'+cls;
+      }
+      if(cls==='energy') energyVal=i;
+      else if(cls==='mood') moodVal=i;
+      else painVal=i;
+    };
+    wrap.appendChild(dot);
+  }
+}
+makeScaleDots('energy-dots','energy');
+makeScaleDots('mood-dots','mood');
+makeScaleDots('pain-dots','pain');
+
+function toggleChip(el) { el.classList.toggle('active'); }
+
+function saveEntry() {
+  const chips = [...document.querySelectorAll('.symptom-chip.active')].map(c=>c.textContent.trim());
+  const note = document.getElementById('journal-note').value.trim();
+  if (!chips.length && !energyVal && !moodVal && !painVal && !note) return;
+  const entry = {
+    date: new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    chips, energy:energyVal, mood:moodVal, pain:painVal, note
+  };
+  journalEntries.unshift(entry);
+  document.querySelectorAll('.symptom-chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.scale-dot').forEach(d=>d.className='scale-dot');
+  document.getElementById('journal-note').value='';
+  energyVal=0; moodVal=0; painVal=0;
+  const conf = document.getElementById('save-confirm');
+  conf.style.display='inline'; setTimeout(()=>conf.style.display='none',2000);
+  renderEntries();
+}
+function renderEntries() {
+  const list = document.getElementById('entries-list');
+  if (!journalEntries.length) { list.innerHTML='<div class="empty-state">No entries yet. Log your first one above.</div>'; return; }
+  list.innerHTML = '';
+  journalEntries.forEach(e => {
+    const card = document.createElement('div');
+    card.className = 'entry-card';
+    const scaleStr = [e.energy?`Energy ${e.energy}/5`:'',e.mood?`Mood ${e.mood}/5`:'',e.pain?`Pain ${e.pain}/5`:''].filter(Boolean).join(' · ');
+    card.innerHTML = `
+      <div class="entry-date">${e.date}</div>
+      ${e.chips.length?`<div class="entry-chips">${e.chips.map(c=>`<span class="entry-chip">${c}</span>`).join('')}</div>`:''}
+      ${scaleStr?`<div class="entry-scales">${scaleStr}</div>`:''}
+      ${e.note?`<div class="entry-note">"${e.note}"</div>`:''}`;
+    list.appendChild(card);
+  });
+}
+
+/* ── FOOD LOG ── */
+function renderMealSlots() {
+  const container = document.getElementById('meal-slots');
+  container.innerHTML = '';
+  Object.keys(mealData).forEach(meal => {
+    const slot = document.createElement('div');
+    slot.className = 'meal-slot';
+    slot.innerHTML = `
+      <div class="meal-slot-header">
+        <div class="meal-slot-name">${meal==='Breakfast'?'🌅':meal==='Lunch'?'☀️':meal==='Dinner'?'🌙':'🍎'} ${meal}</div>
+        <div class="meal-slot-time">${mealTimes[meal]}</div>
+      </div>
+      <div class="meal-items" id="items-${meal}"></div>
+      <div class="meal-add-row">
+        <input class="meal-input" id="inp-${meal}" placeholder="Add food..." onkeydown="if(event.key==='Enter')addMealItem('${meal}')"/>
+        <div class="meal-add-icon" onclick="addMealItem('${meal}')">+</div>
+      </div>`;
+    container.appendChild(slot);
+    renderMealItems(meal);
+  });
+}
+function renderMealItems(meal) {
+  const wrap = document.getElementById('items-'+meal);
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  if (!mealData[meal].length) { wrap.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:2px 0;">Nothing logged yet</div>'; return; }
+  mealData[meal].forEach((item,i) => {
+    const row = document.createElement('div');
+    row.className = 'meal-item';
+    row.innerHTML = `<span>${item}</span><button class="meal-item-del" onclick="removeMealItem('${meal}',${i})">×</button>`;
+    wrap.appendChild(row);
+  });
+}
+function addMealItem(meal) {
+  const inp = document.getElementById('inp-'+meal);
+  const val = inp.value.trim();
+  if (!val) return;
+  mealData[meal].push(val);
+  inp.value = '';
+  renderMealItems(meal);
+}
+function removeMealItem(meal, idx) { mealData[meal].splice(idx,1); renderMealItems(meal); }
+function updateBsStatus(inputId, statusId, min, max) {
+  const val = parseFloat(document.getElementById(inputId).value);
+  const el = document.getElementById(statusId);
+  if (isNaN(val)) { el.style.display='none'; return; }
+  el.style.display='inline-block';
+  if (val<min) { el.className='bs-status bs-low'; el.textContent='Low'; }
+  else if (val>max) { el.className='bs-status bs-high'; el.textContent='High'; }
+  else { el.className='bs-status bs-normal'; el.textContent='Normal'; }
+}
+
+/* ── INIT ── */
+updateMedStats();
+renderRefillGrid();
+renderHabits();
+renderWater();
+renderStreak();
+renderMealSlots();
+</script>
+</body>
+</html>
